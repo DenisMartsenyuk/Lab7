@@ -17,7 +17,7 @@ public class CommandLogin extends Command {
     public Response execute() {
         try {
             context.handlerDatabase.isExistingUser((String) arguments[0].getValue(), (String) arguments[1].getValue());
-            return new Response(getName(),  "Авторизация прошла успешно.");
+            return new Response(getName(),  (String) arguments[0].getValue() + " " + (String) arguments[1].getValue());
         }
         catch (Exception e) {
             return new Response(getName(), "Вы не прошли авторизацию.");

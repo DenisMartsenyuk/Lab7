@@ -1,6 +1,7 @@
 package application;
 
 import communication.Response;
+import network.AddressedResponse;
 
 import java.io.IOException;
 import java.net.SocketException;
@@ -16,21 +17,25 @@ public class Transmitter implements Runnable {
 
     @Override
     public void run() {
-        if(!context.queueAddressedResponse.isEmpty()) {
-            AddressedResponse response = context.queueAddressedResponse.poll();
-            try {
-                context.handlerClient.sendAddressedResponse(response);
-            } catch (SocketException e) {
-                ArrayList<Response> error = new ArrayList<>();
-                error.add(new Response("Ошибка", "слишком много запросов, перезагрузите клиент."));
+        try {
+            if (!context.queueAddressedResponse.isEmpty()) {
+                AddressedResponse response = context.queueAddressedResponse.poll();
                 try {
-                    context.handlerClient.sendAddressedResponse(new AddressedResponse(response.getSocketAddress(), error));
-                } catch (IOException e1) {
-                    context.logger.warn("Произошла ошибка при отправке ответа: " + e1.getMessage());
+                    context.handlerClient.sendAddressedResponse(response);
+                } catch (SocketException e) {
+                    ArrayList<Response> error = new ArrayList<>();
+                    error.add(new Response("Ошибка", "слишком много запросов, перезагрузите клиент."));
+                    try {
+                        context.handlerClient.sendAddressedResponse(new AddressedResponse(response.getSocketAddress(), error));
+                    } catch (IOException e1) {
+                        context.logger.warn("Произошла ошибка при отправке ответа: " + e1.getMessage());
+                    }
+                } catch (IOException e) {
+                    context.logger.warn("Произошла ошибка при отправке ответа: " + e.getMessage());
                 }
-            } catch (IOException e) {
-                context.logger.warn("Произошла ошибка при отправке ответа: " + e.getMessage());
             }
+        } catch (Exception e) {
+
         }
     }
 }

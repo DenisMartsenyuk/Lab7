@@ -1,5 +1,7 @@
 package application;
 
+import network.AddressedRequest;
+import network.AddressedResponse;
 import communication.Request;
 import communication.Response;
 
@@ -15,10 +17,8 @@ public class HandlerRequest implements Runnable {
 
     @Override
     public void run() {
-
-        if(!context.queueAddressedRequests.isEmpty()) {
-
-            try {
+        try {
+            if (!context.queueAddressedRequests.isEmpty()) {
                 AddressedRequest addressedRequest = context.queueAddressedRequests.poll();
 
                 ArrayList<Response> responses = new ArrayList<>(addressedRequest.getRequests().size());
@@ -27,9 +27,8 @@ public class HandlerRequest implements Runnable {
                 }
                 context.queueAddressedResponse.add(new AddressedResponse(addressedRequest.getSocketAddress(), responses));
             }
-            catch (Exception e) {
-                System.out.println("fghjkl");
-            }
+        } catch (Exception e) {
+
         }
     }
 }

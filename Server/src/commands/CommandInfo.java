@@ -16,6 +16,15 @@ public class CommandInfo extends Command {
 
     @Override
     public Response execute() {
-        return new Response(getName(), context.productList.printInfo());
+        try {
+            if(context.handlerDatabase.isExistingUser(login, password) == -1) {
+                throw new Exception();
+            }
+            else {
+                return new Response(getName(), context.productList.printInfo());
+            }
+        } catch (Exception e) {
+            return new Response(getName(), "Вы не прошли авторизацию.");
+        }
     }
 }

@@ -1,4 +1,4 @@
-package application;
+package network;
 
 import communication.Request;
 

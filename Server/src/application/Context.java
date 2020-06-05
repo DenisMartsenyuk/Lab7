@@ -1,5 +1,8 @@
 package application;
 
+import network.AddressedRequest;
+import network.AddressedResponse;
+import network.HandlerClient;
 import collection.ProductList;
 import commands.*;
 import org.slf4j.Logger;
@@ -64,7 +67,7 @@ public class Context {
             System.exit(1);
         }
         try {
-            handlerDatabase.initialization("jdbc:postgresql://127.0.0.1:5432/lab6_prob");
+            handlerDatabase.initialization("jdbc:postgresql://pg/studs", "s283005", "exk189"); //handlerDatabase.initialization("jdbc:postgresql://localhost:5432/lab6_prob");
         } catch (Exception e) {
             logger.error("Не удалось подключиться к базе данных!");
             System.exit(1);

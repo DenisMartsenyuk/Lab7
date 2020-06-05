@@ -24,6 +24,4 @@ public class CommandUpdateById extends Command {
             return new Response(getName(), "Вы не прошли авторизацию.");
         }
     }
-
-
 }

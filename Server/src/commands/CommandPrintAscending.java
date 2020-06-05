@@ -16,6 +16,15 @@ public class CommandPrintAscending extends Command {
 
     @Override
     public Response execute() {
-        return new Response(getName(), context.productList.printAscending());
+        try {
+            if(context.handlerDatabase.isExistingUser(login, password) == -1) {
+                throw new Exception();
+            }
+            else {
+                return new Response(getName(), context.productList.printAscending());
+            }
+        } catch (Exception e) {
+            return new Response(getName(), "Вы не прошли авторизацию.");
+        }
     }
 }

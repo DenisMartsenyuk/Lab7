@@ -17,6 +17,15 @@ public class CommandPrintLessUnitOfMeasure extends Command {
 
     @Override
     public Response execute() {
-        return new Response(getName(), context.productList.printLessThanUnitOfMeasure((UnitOfMeasure)arguments[0].getValue()));
+        try {
+            if(context.handlerDatabase.isExistingUser(login, password) == -1) {
+                throw new Exception();
+            }
+            else {
+                return new Response(getName(), context.productList.printLessThanUnitOfMeasure((UnitOfMeasure)arguments[0].getValue()));
+            }
+        } catch (Exception e) {
+            return new Response(getName(), "Вы не прошли авторизацию.");
+        }
     }
 }

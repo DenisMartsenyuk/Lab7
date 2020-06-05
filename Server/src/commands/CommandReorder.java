@@ -16,6 +16,15 @@ public class CommandReorder extends Command {
 
     @Override
     public Response execute() {
-        return new Response(getName(), context.productList.reverse());
+        try {
+            if(context.handlerDatabase.isExistingUser(login, password) == -1) {
+                throw new Exception();
+            }
+            else {
+                return new Response(getName(), context.productList.reverse());
+            }
+        } catch (Exception e) {
+            return new Response(getName(), "Вы не прошли авторизацию.");
+        }
     }
 }

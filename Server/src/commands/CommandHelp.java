@@ -18,10 +18,19 @@ public class CommandHelp extends Command {
 
     @Override
     public Response execute() {
-        String result = "\n";
-        for (Map.Entry<String, Command> command : context.handlerCommands.getCommands().entrySet()){
-            result = result + command.getKey() + ": " + command.getValue().getManual() + "\n";
+        try {
+            if(context.handlerDatabase.isExistingUser(login, password) == -1) {
+                throw new Exception();
+            }
+            else {
+                String result = "\n";
+                for (Map.Entry<String, Command> command : context.handlerCommands.getCommands().entrySet()){
+                    result = result + command.getKey() + ": " + command.getValue().getManual() + "\n";
+                }
+                return new Response(getName(), result);
+            }
+        } catch (Exception e) {
+            return new Response(getName(), "Вы не прошли авторизацию.");
         }
-        return new Response(getName(), result);
     }
 }

@@ -1,6 +1,5 @@
 package commands;
 
-import application.AuthorizationFailedException;
 import application.CommandType;
 import application.Context;
 import java.util.ArrayList;
@@ -28,9 +27,6 @@ public class HandlerCommands {
     }
 
     public String executeCommand(ArrayList<String> data) throws Exception {
-        if(context.password == null || context.login == null) {
-            throw new AuthorizationFailedException();
-        }
         return clientCommands.get(data.remove(0)).execute(data);
     }
 }

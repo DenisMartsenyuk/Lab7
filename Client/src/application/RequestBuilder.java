@@ -29,9 +29,6 @@ public class RequestBuilder {
 
     public Request getRequest(ArrayList<String> data) throws InvalidAmountArgumentException, TypeException, CheckerException, AuthorizationFailedException {
         String nameCommand = data.remove(0);
-        if((context.login == null || context.password == null) && !nameCommand.equals("login") && !nameCommand.equals("registration")) {
-            throw new AuthorizationFailedException();
-        }
         ArrayList<Argument> arguments = serverCommands.get(nameCommand).getArguments(data);
         Argument[] arrayArguments = new Argument[arguments.size()];
         arguments.toArray(arrayArguments);

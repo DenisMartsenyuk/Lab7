@@ -31,7 +31,7 @@ public class HandlerCommands {
             commands.get(request.getName()).setParameters(request.getArguments());
         }
         else {
-            commands.get(request.getName()).setParameters(request.getArguments());//.setLogin(request.getLogin()).setPassword(request.getPassword());
+            commands.get(request.getName()).setParameters(request.getArguments()).setLogin(request.getLogin()).setPassword(request.getPassword());
         }
         return commands.get(request.getName()).execute();
     }

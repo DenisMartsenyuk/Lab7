@@ -5,6 +5,8 @@ import arguments.builders.ProductBuilder;
 import arguments.exceptions.CheckerException;
 import arguments.exceptions.InvalidAmountArgumentException;
 import arguments.exceptions.TypeException;
+import arguments.handlers.HandlerLogin;
+import arguments.handlers.HandlerRequst;
 import arguments.valid.*;
 import commands.CommandExecuteScript;
 import commands.CommandExit;
@@ -18,7 +20,7 @@ import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.StringTokenizer;
+import java.util.HashSet;
 
 public class Context {
     public HandlerServer handlerServer;
@@ -27,6 +29,8 @@ public class Context {
     public HandlerCommands handlerCommands;
     public RequestBuilder requestBuilder;
     public HashMap<String, CommandType> commands;
+    public HashMap<String, HandlerRequst> mapHandlers;
+    public HashSet<String> commandsWithoutAuth;
 
     public String login;
     public String password;
@@ -37,6 +41,8 @@ public class Context {
         handlerCommands = new HandlerCommands(this);
         requestBuilder = new RequestBuilder(this);
         commands = new HashMap<>();
+        mapHandlers = new HashMap<>();
+        commandsWithoutAuth = new HashSet<>();
     }
 
     public void initialization(String[] args) {
@@ -57,15 +63,19 @@ public class Context {
 
         handlerInput = new HandlerInput();
 
+        TemplateServerCommand loginCommand = new TemplateServerCommand("login").setValidArgument(new ValidString()).setValidArgument(new ValidString());
+        TemplateServerCommand registrationCommand = new TemplateServerCommand("registration").setValidArgument(new ValidString()).setValidArgument(new ValidString());
+
+
         requestBuilder.addCommand(new TemplateServerCommand("add").setBuildArgument(new ProductBuilder(handlerInput)))
                       .addCommand(new TemplateServerCommand("add_if_min").setBuildArgument(new ProductBuilder(handlerInput)))
                       .addCommand(new TemplateServerCommand("clear"))
                       .addCommand(new TemplateServerCommand("help"))
                       .addCommand(new TemplateServerCommand("info"))
-                      .addCommand(new TemplateServerCommand("login").setValidArgument(new ValidString()).setValidArgument(new ValidString()))
+                      .addCommand(loginCommand)
                       .addCommand(new TemplateServerCommand("print_ascending"))
                       .addCommand(new TemplateServerCommand("filter_less_than_unit_of_measure").setValidArgument(new ValidUnitOfMeasure()))
-                      .addCommand(new TemplateServerCommand("registration").setValidArgument(new ValidString()).setValidArgument(new ValidString()))
+                      .addCommand(registrationCommand)
                       .addCommand(new TemplateServerCommand("remove_by_id").setValidArgument(new ValidInteger()))
                       .addCommand(new TemplateServerCommand("remove_all_by_manufacture_cost").setValidArgument(new ValidLong()))
                       .addCommand(new TemplateServerCommand("remove_first"))
@@ -76,6 +86,10 @@ public class Context {
         handlerCommands.addCommand(new CommandExecuteScript().setValidArgument(new ValidString()))
                        .addCommand(new CommandHelpClient())
                        .addCommand(new CommandExit());
+
+        mapHandlers.put(loginCommand.getName(), new HandlerLogin());
+        commandsWithoutAuth.add(loginCommand.getName());
+        commandsWithoutAuth.add(registrationCommand.getName());
 
         try {
             handlerServer.connect(host, port);
@@ -90,21 +104,12 @@ public class Context {
             handlerServer.sendRequests(requests);
             ArrayList<Response> responses = handlerServer.receiveResponse(delayMillis);
             for (Response response : responses) {
-                if(response.getNameCommand().equals("login")) {
-                    StringTokenizer stringTokenizer = new StringTokenizer(response.getResultComand());
-                    if(stringTokenizer.countTokens() == 2) {
-                        if(login == null && password == null) {
-                            System.out.println("Введите \"help\" для просмотра перечня команд сервера.\n" +
-                                                "Введите \"help_client\" для просмотра перечня команд клиента.\n" +
-                                               "Вводите команды:");
-                        }
-                        login = stringTokenizer.nextToken();
-                        password = stringTokenizer.nextToken();
-                        System.out.println(response.getNameCommand() + ": вход выполнен!");
-                        continue;
-                    }
+                if(mapHandlers.containsKey(response.getNameCommand())) {
+                    mapHandlers.get(response.getNameCommand()).processing(this, response);
                 }
-                System.out.println(response.getNameCommand() + ": " + response.getResultComand());
+                else {
+                    System.out.println(response.getNameCommand() + ": " + response.getResultComand());
+                }
             }
             requests.clear();
             responses.clear();
@@ -125,6 +130,11 @@ public class Context {
                     if(commands.get(data.get(0)) == null) {
                         throw new NullPointerException();
                     }
+                    if(password == null && login == null) {
+                        if(!commandsWithoutAuth.contains(data.get(0))) {
+                            throw new AuthorizationFailedException();
+                        }
+                    }
                     if(commands.get(data.get(0)) == CommandType.SERVER) {
                         requests.add(requestBuilder.getRequest(data));
                     } else if(commands.get(data.get(0)) == CommandType.CLIENT) {
@@ -135,6 +145,8 @@ public class Context {
                     processingRequests(requests, 200);
             } catch (NullPointerException e) {
                 System.out.println("Не найдена такая команда!");
+            } catch (AuthorizationFailedException e) {
+                System.out.println("Для выполнения этой команды нужно сначала авторизоваться!");
             } catch (InvalidAmountArgumentException e) {
                 System.out.println("Неверное количество параметров!");
             } catch (TypeException e) {
@@ -145,8 +157,6 @@ public class Context {
                 System.out.println("Не удалось дессериализовать ответ сервера.");
             } catch (SocketTimeoutException e) {
                 System.out.println("Ответ на запрос не пришел. Возможно, сервер временно недоступен.");
-            } catch (AuthorizationFailedException e) {
-                System.out.println("Ошибка авторизации.");
             } catch (Exception e) {
                 System.out.println(e.getMessage());
             }
